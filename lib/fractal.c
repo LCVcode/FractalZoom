@@ -948,12 +948,20 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_GetAttrStr(PyObject* obj, PyObject
 /* GetBuiltinName.proto */
 static PyObject *__Pyx_GetBuiltinName(PyObject *name);
 
-/* None.proto */
-static CYTHON_INLINE long __Pyx_div_long(long, long);
+/* PyIntBinop.proto */
+#if !CYTHON_COMPILING_IN_PYPY
+static PyObject* __Pyx_PyInt_SubtractCObj(PyObject *op1, PyObject *op2, long intval, int inplace, int zerodivision_check);
+#else
+#define __Pyx_PyInt_SubtractCObj(op1, op2, intval, inplace, zerodivision_check)\
+    (inplace ? PyNumber_InPlaceSubtract(op1, op2) : PyNumber_Subtract(op1, op2))
+#endif
 
-/* UnaryNegOverflows.proto */
-#define UNARY_NEG_WOULD_OVERFLOW(x)\
-        (((x) < 0) & ((unsigned long)(x) == 0-(unsigned long)(x)))
+/* PyIntFromDouble.proto */
+#if PY_MAJOR_VERSION < 3
+static CYTHON_INLINE PyObject* __Pyx_PyInt_FromDouble(double value);
+#else
+#define __Pyx_PyInt_FromDouble(value) PyLong_FromDouble(value)
+#endif
 
 /* PyThreadStateGet.proto */
 #if CYTHON_FAST_THREAD_STATE
@@ -1223,7 +1231,7 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
 
 /* Module declarations from 'fractal' */
-static struct __pyx_t_7fractal_color __pyx_f_7fractal_get_color(int, int); /*proto*/
+static struct __pyx_t_7fractal_color __pyx_f_7fractal_get_color(float, float); /*proto*/
 static PyObject *__pyx_f_7fractal_color_to_tuple(struct __pyx_t_7fractal_color); /*proto*/
 static int __pyx_f_7fractal_dive(__pyx_t_double_complex, __pyx_t_double_complex, int); /*proto*/
 static void __pyx_f_7fractal_make_image(int, int, int); /*proto*/
@@ -1291,6 +1299,7 @@ static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_width;
 static PyObject *__pyx_pf_7fractal_get_image(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_size); /* proto */
 static PyObject *__pyx_pf_7fractal_2default(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_int_256;
 static PyObject *__pyx_tuple_;
 static PyObject *__pyx_tuple__3;
 static PyObject *__pyx_codeobj__2;
@@ -1300,17 +1309,20 @@ static PyObject *__pyx_codeobj__4;
 /* "fractal.pyx":9
  *     int r, g, b
  * 
- * cdef color get_color(int depth, int max_depth):             # <<<<<<<<<<<<<<
- *     cdef int value = 256 - (256 * depth) / max_depth
+ * cdef color get_color(float depth, float max_depth):             # <<<<<<<<<<<<<<
+ *     cdef int value = 256 - int(depth * 256 / max_depth)
  *     cdef color result
  */
 
-static struct __pyx_t_7fractal_color __pyx_f_7fractal_get_color(int __pyx_v_depth, int __pyx_v_max_depth) {
+static struct __pyx_t_7fractal_color __pyx_f_7fractal_get_color(float __pyx_v_depth, float __pyx_v_max_depth) {
   int __pyx_v_value;
   struct __pyx_t_7fractal_color __pyx_v_result;
   struct __pyx_t_7fractal_color __pyx_r;
   __Pyx_RefNannyDeclarations
-  long __pyx_t_1;
+  float __pyx_t_1;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  int __pyx_t_4;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -1318,24 +1330,27 @@ static struct __pyx_t_7fractal_color __pyx_f_7fractal_get_color(int __pyx_v_dept
 
   /* "fractal.pyx":10
  * 
- * cdef color get_color(int depth, int max_depth):
- *     cdef int value = 256 - (256 * depth) / max_depth             # <<<<<<<<<<<<<<
+ * cdef color get_color(float depth, float max_depth):
+ *     cdef int value = 256 - int(depth * 256 / max_depth)             # <<<<<<<<<<<<<<
  *     cdef color result
  *     result.r = value
  */
-  __pyx_t_1 = (0x100 * __pyx_v_depth);
+  __pyx_t_1 = (__pyx_v_depth * 256.0);
   if (unlikely(__pyx_v_max_depth == 0)) {
-    PyErr_SetString(PyExc_ZeroDivisionError, "integer division or modulo by zero");
+    PyErr_SetString(PyExc_ZeroDivisionError, "float division");
     __PYX_ERR(0, 10, __pyx_L1_error)
   }
-  else if (sizeof(long) == sizeof(long) && (!(((int)-1) > 0)) && unlikely(__pyx_v_max_depth == (int)-1)  && unlikely(UNARY_NEG_WOULD_OVERFLOW(__pyx_t_1))) {
-    PyErr_SetString(PyExc_OverflowError, "value too large to perform division");
-    __PYX_ERR(0, 10, __pyx_L1_error)
-  }
-  __pyx_v_value = (0x100 - __Pyx_div_long(__pyx_t_1, __pyx_v_max_depth));
+  __pyx_t_2 = __Pyx_PyInt_FromDouble((__pyx_t_1 / __pyx_v_max_depth)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_PyInt_SubtractCObj(__pyx_int_256, __pyx_t_2, 0x100, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_v_value = __pyx_t_4;
 
   /* "fractal.pyx":12
- *     cdef int value = 256 - (256 * depth) / max_depth
+ *     cdef int value = 256 - int(depth * 256 / max_depth)
  *     cdef color result
  *     result.r = value             # <<<<<<<<<<<<<<
  *     result.g = value
@@ -1374,13 +1389,15 @@ static struct __pyx_t_7fractal_color __pyx_f_7fractal_get_color(int __pyx_v_dept
   /* "fractal.pyx":9
  *     int r, g, b
  * 
- * cdef color get_color(int depth, int max_depth):             # <<<<<<<<<<<<<<
- *     cdef int value = 256 - (256 * depth) / max_depth
+ * cdef color get_color(float depth, float max_depth):             # <<<<<<<<<<<<<<
+ *     cdef int value = 256 - int(depth * 256 / max_depth)
  *     cdef color result
  */
 
   /* function exit code */
   __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
   __Pyx_WriteUnraisable("fractal.get_color", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
   __Pyx_pretend_to_initialize(&__pyx_r);
   __pyx_L0:;
@@ -1665,50 +1682,50 @@ static void __pyx_f_7fractal_make_image(int __pyx_v_h, int __pyx_v_w, int __pyx_
   /* "fractal.pyx":39
  *     cdef:
  *         int depth, i, j
- *         complex z, c=-0.3+0.4j             # <<<<<<<<<<<<<<
+ *         complex z, c=-0.8 - 0.12345j             # <<<<<<<<<<<<<<
  *         color value
  *         double real, imag, imag_step, real_step
  */
-  __pyx_v_c = __Pyx_c_sum_double(__pyx_t_double_complex_from_parts(-0.3, 0), __pyx_t_double_complex_from_parts(0, 0.4));
+  __pyx_v_c = __Pyx_c_diff_double(__pyx_t_double_complex_from_parts(-0.8, 0), __pyx_t_double_complex_from_parts(0, 0.12345));
 
   /* "fractal.pyx":44
  *         float real_lo, real_hi, imag_lo, imag_hi
  * 
- *     real_lo = -2.0             # <<<<<<<<<<<<<<
- *     real_hi =  2.0
- *     imag_lo = -2.0
+ *     real_lo = -0.0             # <<<<<<<<<<<<<<
+ *     real_hi =  1.0
+ *     imag_lo = -0.0
  */
-  __pyx_v_real_lo = -2.0;
+  __pyx_v_real_lo = -0.0;
 
   /* "fractal.pyx":45
  * 
- *     real_lo = -2.0
- *     real_hi =  2.0             # <<<<<<<<<<<<<<
- *     imag_lo = -2.0
- *     imag_hi =  2.0
+ *     real_lo = -0.0
+ *     real_hi =  1.0             # <<<<<<<<<<<<<<
+ *     imag_lo = -0.0
+ *     imag_hi =  1.0
  */
-  __pyx_v_real_hi = 2.0;
+  __pyx_v_real_hi = 1.0;
 
   /* "fractal.pyx":46
- *     real_lo = -2.0
- *     real_hi =  2.0
- *     imag_lo = -2.0             # <<<<<<<<<<<<<<
- *     imag_hi =  2.0
+ *     real_lo = -0.0
+ *     real_hi =  1.0
+ *     imag_lo = -0.0             # <<<<<<<<<<<<<<
+ *     imag_hi =  1.0
  * 
  */
-  __pyx_v_imag_lo = -2.0;
+  __pyx_v_imag_lo = -0.0;
 
   /* "fractal.pyx":47
- *     real_hi =  2.0
- *     imag_lo = -2.0
- *     imag_hi =  2.0             # <<<<<<<<<<<<<<
+ *     real_hi =  1.0
+ *     imag_lo = -0.0
+ *     imag_hi =  1.0             # <<<<<<<<<<<<<<
  * 
  *     imag_step = (imag_hi - imag_lo) / h
  */
-  __pyx_v_imag_hi = 2.0;
+  __pyx_v_imag_hi = 1.0;
 
   /* "fractal.pyx":49
- *     imag_hi =  2.0
+ *     imag_hi =  1.0
  * 
  *     imag_step = (imag_hi - imag_lo) / h             # <<<<<<<<<<<<<<
  *     real_step = (real_hi - real_lo) / w
@@ -1726,7 +1743,7 @@ static void __pyx_f_7fractal_make_image(int __pyx_v_h, int __pyx_v_w, int __pyx_
  *     imag_step = (imag_hi - imag_lo) / h
  *     real_step = (real_hi - real_lo) / w             # <<<<<<<<<<<<<<
  * 
- *     #for i, imag in enumerate(arange(-2, 2, imag_step)):
+ *     for i in range(h):
  */
   __pyx_t_6 = (__pyx_v_real_hi - __pyx_v_real_lo);
   if (unlikely(__pyx_v_w == 0)) {
@@ -1735,50 +1752,50 @@ static void __pyx_f_7fractal_make_image(int __pyx_v_h, int __pyx_v_w, int __pyx_
   }
   __pyx_v_real_step = (__pyx_t_6 / __pyx_v_w);
 
-  /* "fractal.pyx":54
- *     #for i, imag in enumerate(arange(-2, 2, imag_step)):
- *         #for j, real in enumerate(arange(-2, 2, real_step)):
+  /* "fractal.pyx":52
+ *     real_step = (real_hi - real_lo) / w
+ * 
  *     for i in range(h):             # <<<<<<<<<<<<<<
  *         for j in range(w):
- *             z.real = -2 + j * real_step
+ *             z.real = real_lo + j * real_step
  */
   __pyx_t_7 = __pyx_v_h;
   __pyx_t_8 = __pyx_t_7;
   for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
     __pyx_v_i = __pyx_t_9;
 
-    /* "fractal.pyx":55
- *         #for j, real in enumerate(arange(-2, 2, real_step)):
+    /* "fractal.pyx":53
+ * 
  *     for i in range(h):
  *         for j in range(w):             # <<<<<<<<<<<<<<
- *             z.real = -2 + j * real_step
- *             z.imag = -2 + i * imag_step
+ *             z.real = real_lo + j * real_step
+ *             z.imag = imag_lo + i * imag_step
  */
     __pyx_t_10 = __pyx_v_w;
     __pyx_t_11 = __pyx_t_10;
     for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
       __pyx_v_j = __pyx_t_12;
 
-      /* "fractal.pyx":56
+      /* "fractal.pyx":54
  *     for i in range(h):
  *         for j in range(w):
- *             z.real = -2 + j * real_step             # <<<<<<<<<<<<<<
- *             z.imag = -2 + i * imag_step
+ *             z.real = real_lo + j * real_step             # <<<<<<<<<<<<<<
+ *             z.imag = imag_lo + i * imag_step
  * 
  */
-      __Pyx_SET_CREAL(__pyx_v_z, (-2.0 + (__pyx_v_j * __pyx_v_real_step)));
+      __Pyx_SET_CREAL(__pyx_v_z, (__pyx_v_real_lo + (__pyx_v_j * __pyx_v_real_step)));
 
-      /* "fractal.pyx":57
+      /* "fractal.pyx":55
  *         for j in range(w):
- *             z.real = -2 + j * real_step
- *             z.imag = -2 + i * imag_step             # <<<<<<<<<<<<<<
+ *             z.real = real_lo + j * real_step
+ *             z.imag = imag_lo + i * imag_step             # <<<<<<<<<<<<<<
  * 
  *             depth = dive(z, c, max_depth)
  */
-      __Pyx_SET_CIMAG(__pyx_v_z, (-2.0 + (__pyx_v_i * __pyx_v_imag_step)));
+      __Pyx_SET_CIMAG(__pyx_v_z, (__pyx_v_imag_lo + (__pyx_v_i * __pyx_v_imag_step)));
 
-      /* "fractal.pyx":59
- *             z.imag = -2 + i * imag_step
+      /* "fractal.pyx":57
+ *             z.imag = imag_lo + i * imag_step
  * 
  *             depth = dive(z, c, max_depth)             # <<<<<<<<<<<<<<
  *             value = get_color(depth, max_depth)
@@ -1786,7 +1803,7 @@ static void __pyx_f_7fractal_make_image(int __pyx_v_h, int __pyx_v_w, int __pyx_
  */
       __pyx_v_depth = __pyx_f_7fractal_dive(__pyx_v_z, __pyx_v_c, __pyx_v_max_depth);
 
-      /* "fractal.pyx":60
+      /* "fractal.pyx":58
  * 
  *             depth = dive(z, c, max_depth)
  *             value = get_color(depth, max_depth)             # <<<<<<<<<<<<<<
@@ -1795,20 +1812,20 @@ static void __pyx_f_7fractal_make_image(int __pyx_v_h, int __pyx_v_w, int __pyx_
  */
       __pyx_v_value = __pyx_f_7fractal_get_color(__pyx_v_depth, __pyx_v_max_depth);
 
-      /* "fractal.pyx":62
+      /* "fractal.pyx":60
  *             value = get_color(depth, max_depth)
  * 
  *             pixels[i, j] = color_to_tuple(value)             # <<<<<<<<<<<<<<
  * 
  *     im.show()
  */
-      __pyx_t_1 = __pyx_f_7fractal_color_to_tuple(__pyx_v_value); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 62, __pyx_L1_error)
+      __pyx_t_1 = __pyx_f_7fractal_color_to_tuple(__pyx_v_value); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 60, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 62, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 60, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 62, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 60, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 62, __pyx_L1_error)
+      __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 60, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_GIVEREF(__pyx_t_2);
       PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_2);
@@ -1816,20 +1833,20 @@ static void __pyx_f_7fractal_make_image(int __pyx_v_h, int __pyx_v_w, int __pyx_
       PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_5);
       __pyx_t_2 = 0;
       __pyx_t_5 = 0;
-      if (unlikely(PyObject_SetItem(__pyx_v_pixels, __pyx_t_4, __pyx_t_1) < 0)) __PYX_ERR(0, 62, __pyx_L1_error)
+      if (unlikely(PyObject_SetItem(__pyx_v_pixels, __pyx_t_4, __pyx_t_1) < 0)) __PYX_ERR(0, 60, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     }
   }
 
-  /* "fractal.pyx":64
+  /* "fractal.pyx":62
  *             pixels[i, j] = color_to_tuple(value)
  * 
  *     im.show()             # <<<<<<<<<<<<<<
  * 
  * def get_image(size):
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_im, __pyx_n_s_show); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 64, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_im, __pyx_n_s_show); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
@@ -1843,7 +1860,7 @@ static void __pyx_f_7fractal_make_image(int __pyx_v_h, int __pyx_v_w, int __pyx_
   }
   __pyx_t_1 = (__pyx_t_5) ? __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_5) : __Pyx_PyObject_CallNoArg(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 64, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -1871,7 +1888,7 @@ static void __pyx_f_7fractal_make_image(int __pyx_v_h, int __pyx_v_w, int __pyx_
   __Pyx_RefNannyFinishContext();
 }
 
-/* "fractal.pyx":66
+/* "fractal.pyx":64
  *     im.show()
  * 
  * def get_image(size):             # <<<<<<<<<<<<<<
@@ -1907,16 +1924,16 @@ static PyObject *__pyx_pf_7fractal_get_image(CYTHON_UNUSED PyObject *__pyx_self,
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_image", 0);
 
-  /* "fractal.pyx":67
+  /* "fractal.pyx":65
  * 
  * def get_image(size):
  *     im = Image.new("RGB", size, "black")             # <<<<<<<<<<<<<<
  *     return im
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_Image); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_Image); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 65, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_new); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_new); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 65, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_2 = NULL;
@@ -1934,7 +1951,7 @@ static PyObject *__pyx_pf_7fractal_get_image(CYTHON_UNUSED PyObject *__pyx_self,
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_3)) {
     PyObject *__pyx_temp[4] = {__pyx_t_2, __pyx_n_s_RGB, __pyx_v_size, __pyx_n_s_black};
-    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_4, 3+__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 67, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_4, 3+__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 65, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
@@ -1942,13 +1959,13 @@ static PyObject *__pyx_pf_7fractal_get_image(CYTHON_UNUSED PyObject *__pyx_self,
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
     PyObject *__pyx_temp[4] = {__pyx_t_2, __pyx_n_s_RGB, __pyx_v_size, __pyx_n_s_black};
-    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_4, 3+__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 67, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_4, 3+__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 65, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
   #endif
   {
-    __pyx_t_5 = PyTuple_New(3+__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 67, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(3+__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 65, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     if (__pyx_t_2) {
       __Pyx_GIVEREF(__pyx_t_2); PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_2); __pyx_t_2 = NULL;
@@ -1962,7 +1979,7 @@ static PyObject *__pyx_pf_7fractal_get_image(CYTHON_UNUSED PyObject *__pyx_self,
     __Pyx_INCREF(__pyx_n_s_black);
     __Pyx_GIVEREF(__pyx_n_s_black);
     PyTuple_SET_ITEM(__pyx_t_5, 2+__pyx_t_4, __pyx_n_s_black);
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 67, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 65, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   }
@@ -1970,7 +1987,7 @@ static PyObject *__pyx_pf_7fractal_get_image(CYTHON_UNUSED PyObject *__pyx_self,
   __pyx_v_im = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "fractal.pyx":68
+  /* "fractal.pyx":66
  * def get_image(size):
  *     im = Image.new("RGB", size, "black")
  *     return im             # <<<<<<<<<<<<<<
@@ -1982,7 +1999,7 @@ static PyObject *__pyx_pf_7fractal_get_image(CYTHON_UNUSED PyObject *__pyx_self,
   __pyx_r = __pyx_v_im;
   goto __pyx_L0;
 
-  /* "fractal.pyx":66
+  /* "fractal.pyx":64
  *     im.show()
  * 
  * def get_image(size):             # <<<<<<<<<<<<<<
@@ -2005,7 +2022,7 @@ static PyObject *__pyx_pf_7fractal_get_image(CYTHON_UNUSED PyObject *__pyx_self,
   return __pyx_r;
 }
 
-/* "fractal.pyx":70
+/* "fractal.pyx":68
  *     return im
  * 
  * def default():             # <<<<<<<<<<<<<<
@@ -2031,42 +2048,52 @@ static PyObject *__pyx_pf_7fractal_2default(CYTHON_UNUSED PyObject *__pyx_self) 
   int __pyx_v_height;
   int __pyx_v_width;
   int __pyx_v_depth_limit;
+  long __pyx_v_size;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  int __pyx_t_1;
-  int __pyx_t_2;
+  long __pyx_t_1;
+  long __pyx_t_2;
   __Pyx_RefNannySetupContext("default", 0);
 
-  /* "fractal.pyx":77
+  /* "fractal.pyx":75
  *         complex point, offset
  * 
- *     height, width = 900, 900             # <<<<<<<<<<<<<<
- *     depth_limit = 125
+ *     size = 4096             # <<<<<<<<<<<<<<
+ *     height, width = size, size
+ *     depth_limit = 128
+ */
+  __pyx_v_size = 0x1000;
+
+  /* "fractal.pyx":76
+ * 
+ *     size = 4096
+ *     height, width = size, size             # <<<<<<<<<<<<<<
+ *     depth_limit = 128
  * 
  */
-  __pyx_t_1 = 0x384;
-  __pyx_t_2 = 0x384;
+  __pyx_t_1 = __pyx_v_size;
+  __pyx_t_2 = __pyx_v_size;
   __pyx_v_height = __pyx_t_1;
   __pyx_v_width = __pyx_t_2;
 
-  /* "fractal.pyx":78
- * 
- *     height, width = 900, 900
- *     depth_limit = 125             # <<<<<<<<<<<<<<
+  /* "fractal.pyx":77
+ *     size = 4096
+ *     height, width = size, size
+ *     depth_limit = 128             # <<<<<<<<<<<<<<
  * 
  *     make_image(height, width, depth_limit)
  */
-  __pyx_v_depth_limit = 0x7D;
+  __pyx_v_depth_limit = 0x80;
 
-  /* "fractal.pyx":80
- *     depth_limit = 125
+  /* "fractal.pyx":79
+ *     depth_limit = 128
  * 
  *     make_image(height, width, depth_limit)             # <<<<<<<<<<<<<<
  * 
  */
   __pyx_f_7fractal_make_image(__pyx_v_height, __pyx_v_width, __pyx_v_depth_limit);
 
-  /* "fractal.pyx":70
+  /* "fractal.pyx":68
  *     return im
  * 
  * def default():             # <<<<<<<<<<<<<<
@@ -2158,7 +2185,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 54, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 52, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -2168,29 +2195,29 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "fractal.pyx":66
+  /* "fractal.pyx":64
  *     im.show()
  * 
  * def get_image(size):             # <<<<<<<<<<<<<<
  *     im = Image.new("RGB", size, "black")
  *     return im
  */
-  __pyx_tuple_ = PyTuple_Pack(2, __pyx_n_s_size, __pyx_n_s_im); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 66, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(2, __pyx_n_s_size, __pyx_n_s_im); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 64, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
-  __pyx_codeobj__2 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple_, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_fractal_pyx, __pyx_n_s_get_image, 66, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__2)) __PYX_ERR(0, 66, __pyx_L1_error)
+  __pyx_codeobj__2 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple_, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_fractal_pyx, __pyx_n_s_get_image, 64, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__2)) __PYX_ERR(0, 64, __pyx_L1_error)
 
-  /* "fractal.pyx":70
+  /* "fractal.pyx":68
  *     return im
  * 
  * def default():             # <<<<<<<<<<<<<<
  *     cdef:
  *         int height, width
  */
-  __pyx_tuple__3 = PyTuple_Pack(7, __pyx_n_s_height, __pyx_n_s_width, __pyx_n_s_i, __pyx_n_s_depth_limit, __pyx_n_s_c, __pyx_n_s_point, __pyx_n_s_offset); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 70, __pyx_L1_error)
+  __pyx_tuple__3 = PyTuple_Pack(8, __pyx_n_s_height, __pyx_n_s_width, __pyx_n_s_i, __pyx_n_s_depth_limit, __pyx_n_s_c, __pyx_n_s_point, __pyx_n_s_offset, __pyx_n_s_size); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
-  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(0, 0, 7, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_fractal_pyx, __pyx_n_s_default, 70, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) __PYX_ERR(0, 70, __pyx_L1_error)
+  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(0, 0, 8, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_fractal_pyx, __pyx_n_s_default, 68, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) __PYX_ERR(0, 68, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -2200,6 +2227,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
 
 static CYTHON_SMALL_CODE int __Pyx_InitGlobals(void) {
   if (__Pyx_InitStrings(__pyx_string_tab) < 0) __PYX_ERR(0, 1, __pyx_L1_error);
+  __pyx_int_256 = PyInt_FromLong(256); if (unlikely(!__pyx_int_256)) __PYX_ERR(0, 1, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -2511,28 +2539,28 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "fractal.pyx":66
+  /* "fractal.pyx":64
  *     im.show()
  * 
  * def get_image(size):             # <<<<<<<<<<<<<<
  *     im = Image.new("RGB", size, "black")
  *     return im
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7fractal_1get_image, NULL, __pyx_n_s_fractal); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 66, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7fractal_1get_image, NULL, __pyx_n_s_fractal); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 64, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_image, __pyx_t_1) < 0) __PYX_ERR(0, 66, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_image, __pyx_t_1) < 0) __PYX_ERR(0, 64, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "fractal.pyx":70
+  /* "fractal.pyx":68
  *     return im
  * 
  * def default():             # <<<<<<<<<<<<<<
  *     cdef:
  *         int height, width
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7fractal_3default, NULL, __pyx_n_s_fractal); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 70, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7fractal_3default, NULL, __pyx_n_s_fractal); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_default, __pyx_t_1) < 0) __PYX_ERR(0, 70, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_default, __pyx_t_1) < 0) __PYX_ERR(0, 68, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "fractal.pyx":1
@@ -2616,13 +2644,139 @@ static PyObject *__Pyx_GetBuiltinName(PyObject *name) {
     return result;
 }
 
-/* None */
-static CYTHON_INLINE long __Pyx_div_long(long a, long b) {
-    long q = a / b;
-    long r = a - q*b;
-    q -= ((r != 0) & ((r ^ b) < 0));
-    return q;
+/* PyIntBinop */
+#if !CYTHON_COMPILING_IN_PYPY
+static PyObject* __Pyx_PyInt_SubtractCObj(PyObject *op1, PyObject *op2, CYTHON_UNUSED long intval, int inplace, int zerodivision_check) {
+    (void)inplace;
+    (void)zerodivision_check;
+    #if PY_MAJOR_VERSION < 3
+    if (likely(PyInt_CheckExact(op2))) {
+        const long a = intval;
+        long x;
+        long b = PyInt_AS_LONG(op2);
+            x = (long)((unsigned long)a - b);
+            if (likely((x^a) >= 0 || (x^~b) >= 0))
+                return PyInt_FromLong(x);
+            return PyLong_Type.tp_as_number->nb_subtract(op1, op2);
+    }
+    #endif
+    #if CYTHON_USE_PYLONG_INTERNALS
+    if (likely(PyLong_CheckExact(op2))) {
+        const long a = intval;
+        long b, x;
+#ifdef HAVE_LONG_LONG
+        const PY_LONG_LONG lla = intval;
+        PY_LONG_LONG llb, llx;
+#endif
+        const digit* digits = ((PyLongObject*)op2)->ob_digit;
+        const Py_ssize_t size = Py_SIZE(op2);
+        if (likely(__Pyx_sst_abs(size) <= 1)) {
+            b = likely(size) ? digits[0] : 0;
+            if (size == -1) b = -b;
+        } else {
+            switch (size) {
+                case -2:
+                    if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
+                        b = -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
+                        llb = -(PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                case 2:
+                    if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
+                        b = (long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
+                        llb = (PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                case -3:
+                    if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
+                        b = -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
+                        llb = -(PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                case 3:
+                    if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
+                        b = (long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
+                        llb = (PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                case -4:
+                    if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
+                        b = -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
+                        llb = -(PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                case 4:
+                    if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
+                        b = (long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
+                        llb = (PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                default: return PyLong_Type.tp_as_number->nb_subtract(op1, op2);
+            }
+        }
+                x = a - b;
+            return PyLong_FromLong(x);
+#ifdef HAVE_LONG_LONG
+        long_long:
+                llx = lla - llb;
+            return PyLong_FromLongLong(llx);
+#endif
+        
+        
+    }
+    #endif
+    if (PyFloat_CheckExact(op2)) {
+        const long a = intval;
+        double b = PyFloat_AS_DOUBLE(op2);
+            double result;
+            PyFPE_START_PROTECT("subtract", return NULL)
+            result = ((double)a) - (double)b;
+            PyFPE_END_PROTECT(result)
+            return PyFloat_FromDouble(result);
+    }
+    return (inplace ? PyNumber_InPlaceSubtract : PyNumber_Subtract)(op1, op2);
 }
+#endif
+
+/* PyIntFromDouble */
+#if PY_MAJOR_VERSION < 3
+static CYTHON_INLINE PyObject* __Pyx_PyInt_FromDouble(double value) {
+    if (value >= (double)LONG_MIN && value <= (double)LONG_MAX) {
+        return PyInt_FromLong((long)value);
+    }
+    return PyLong_FromDouble(value);
+}
+#endif
 
 /* PyErrFetchRestore */
 #if CYTHON_FAST_THREAD_STATE
@@ -3464,6 +3618,28 @@ bad:
     #endif
 #endif
 
+/* CIntFromPyVerify */
+#define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
+    __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 0)
+#define __PYX_VERIFY_RETURN_INT_EXC(target_type, func_type, func_value)\
+    __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 1)
+#define __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, exc)\
+    {\
+        func_type value = func_value;\
+        if (sizeof(target_type) < sizeof(func_type)) {\
+            if (unlikely(value != (func_type) (target_type) value)) {\
+                func_type zero = 0;\
+                if (exc && unlikely(value == (func_type)-1 && PyErr_Occurred()))\
+                    return (target_type) -1;\
+                if (is_unsigned && unlikely(value < zero))\
+                    goto raise_neg_overflow;\
+                else\
+                    goto raise_overflow;\
+            }\
+        }\
+        return (target_type) value;\
+    }
+
 /* CIntToPy */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
     const int neg_one = (int) ((int) 0 - (int) 1), const_zero = (int) 0;
@@ -3494,28 +3670,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
                                      little, !is_unsigned);
     }
 }
-
-/* CIntFromPyVerify */
-#define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
-    __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 0)
-#define __PYX_VERIFY_RETURN_INT_EXC(target_type, func_type, func_value)\
-    __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 1)
-#define __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, exc)\
-    {\
-        func_type value = func_value;\
-        if (sizeof(target_type) < sizeof(func_type)) {\
-            if (unlikely(value != (func_type) (target_type) value)) {\
-                func_type zero = 0;\
-                if (exc && unlikely(value == (func_type)-1 && PyErr_Occurred()))\
-                    return (target_type) -1;\
-                if (is_unsigned && unlikely(value < zero))\
-                    goto raise_neg_overflow;\
-                else\
-                    goto raise_overflow;\
-            }\
-        }\
-        return (target_type) value;\
-    }
 
 /* CIntFromPy */
 static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
