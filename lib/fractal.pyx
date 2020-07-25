@@ -1,10 +1,8 @@
 from PIL import Image
 from numpy import arange
+from color cimport color
 
 ctypedef double complex complex
-
-cdef struct color:
-    int r, g, b
     
 cdef color get_color(float depth, float max_depth):
     cdef int value = 256 - int(depth * 256 / max_depth)
