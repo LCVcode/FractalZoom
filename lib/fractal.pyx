@@ -1,19 +1,25 @@
 from PIL import Image
-from numpy import arange
-from color cimport color
+cimport color
 
 ctypedef double complex complex
+
+cdef tuple to_tuple(color.color ref):
+    return (ref.r, ref.g, ref.b)
     
-cdef color get_color(float depth, float max_depth):
-    cdef int value = 256 - int(depth * 256 / max_depth)
-    cdef color result
+cdef color.color get_color(int depth, int max_depth):
+    '''
+    Returns a color based upon iteration depth and max_depth
+    '''
+    cdef:
+        color.color result
+        int value
+    value = 256 - (depth * 256 // max_depth)
+
     result.r = value
     result.g = value
     result.b = value
-    return result
 
-cdef tuple color_to_tuple(color value):
-    return (value.r, value.g, value.g)
+    return result
 
 cdef int dive(complex z, complex c, int max_depth):
     '''
@@ -34,15 +40,16 @@ cdef void make_image(int h, int w, int max_depth):
 
     cdef:
         int depth, i, j
-        complex z, c=-0.8 - 0.12345j
-        color value
+        complex z, c= -0.8 + 0.156j
+
+        color.color value
         double real, imag, imag_step, real_step
         float real_lo, real_hi, imag_lo, imag_hi
 
-    real_lo = -0.0
-    real_hi =  1.0
-    imag_lo = -0.0
-    imag_hi =  1.0
+    real_lo = -0.1
+    real_hi =  0.1
+    imag_lo = -0.1
+    imag_hi =  0.1
 
     imag_step = (imag_hi - imag_lo) / h
     real_step = (real_hi - real_lo) / w
@@ -55,7 +62,7 @@ cdef void make_image(int h, int w, int max_depth):
             depth = dive(z, c, max_depth)
             value = get_color(depth, max_depth)
 
-            pixels[i, j] = color_to_tuple(value)
+            pixels[i, j] = to_tuple(value)
 
     im.show()
 
@@ -67,12 +74,11 @@ def default():
     cdef:
         int height, width
         int i, depth_limit
-        color c
+        color.color c
         complex point, offset
 
-    size = 4096 
+    size = 4096 * 2
     height, width = size, size
-    depth_limit = 128
+    depth_limit = 256
 
     make_image(height, width, depth_limit)
-
