@@ -2,11 +2,11 @@ cimport color
 cimport fractal
 from PIL import Image
 
-cdef void make_image(int h, int w, int max_depth):
+cdef void make_image(int h, int w, int max_depth, str filename='temp'):
     '''
     Makes the image of the fractal
     '''
-    im = get_image((h, w))
+    im = Image.new("RGB", (h, w), "black")
     pixels = im.load()
 
     cdef:
@@ -22,8 +22,10 @@ cdef void make_image(int h, int w, int max_depth):
     imag_lo = -0.1
     imag_hi =  0.1
 
-    imag_step = (imag_hi - imag_lo) / h
-    real_step = (real_hi - real_lo) / w
+    imag_step = (imag_hi - imag_lo)
+    imag_step /= h
+    real_step = (real_hi - real_lo)
+    real_step /= w
 
     for i in range(h):
         for j in range(w):
@@ -35,11 +37,7 @@ cdef void make_image(int h, int w, int max_depth):
 
             pixels[i, j] = color.to_tuple(value)
 
-    im.show()
-
-def get_image(size):
-    im = Image.new("RGB", size, "black")
-    return im
+    im.save('img/' + filename + '.png', format="PNG")
 
 def default():
     cdef:
