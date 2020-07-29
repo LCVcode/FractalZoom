@@ -3,9 +3,7 @@ cimport color
 
 ctypedef double complex complex
 
-cdef tuple to_tuple(color.color ref):
-    return (ref.r, ref.g, ref.b)
-    
+
 cdef color.color get_color(int depth, int max_depth):
     '''
     Returns a color based upon iteration depth and max_depth
@@ -44,7 +42,7 @@ cdef void make_image(int h, int w, int max_depth):
 
         color.color value
         double real, imag, imag_step, real_step
-        float real_lo, real_hi, imag_lo, imag_hi
+        double real_lo, real_hi, imag_lo, imag_hi
 
     real_lo = -0.1
     real_hi =  0.1
@@ -62,7 +60,7 @@ cdef void make_image(int h, int w, int max_depth):
             depth = dive(z, c, max_depth)
             value = get_color(depth, max_depth)
 
-            pixels[i, j] = to_tuple(value)
+            pixels[i, j] = color.to_tuple(value)
 
     im.show()
 
@@ -77,7 +75,7 @@ def default():
         color.color c
         complex point, offset
 
-    size = 4096 * 2
+    size = 4096 // 2
     height, width = size, size
     depth_limit = 256
 

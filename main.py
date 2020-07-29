@@ -1,3 +1,4 @@
-from lib.fractal import default
+from fractal import default
+import color 
 
 default()
