@@ -1,4 +1,3 @@
-from fractal import default
-import color 
+from image import default
 
 default()
