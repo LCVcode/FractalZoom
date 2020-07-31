@@ -41,6 +41,9 @@ class Zoomer:
         pyglet.app.run()
 
     def zoom(self, n):
+        if n == 10:
+            self.limits = copy(self.config['limits'])
+            return
         real_step = (self.limits['rhi'] - self.limits['rlo']) / 3
         imag_step = (self.limits['ihi'] - self.limits['ilo']) / 3
 
