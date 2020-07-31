@@ -1,6 +1,6 @@
 # Fractal Zoomer
 
-Simple overview of use/purpose.
+This applicatoin lets you zoom into fractals.
 
 ## Description
 
@@ -10,54 +10,49 @@ A Julia set zoom tool implemented in Cython with basic user controls.
 
 ### Dependencies
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+* Cython
+* Pillow
+* pyglet
 
 ### Installing
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+* Clone repository
+* Compile files with `python setup.py`
 
 ### Executing program
 
 #### Linux Users
-* Use bash script to compile source files and run
+Use bash script to compile source files and run
 ```
 bash run.sh
 ```
-* To skip recompiling, you can use
+To skip recompiling, you can use
 ```
 python main.py
 ```
+
 #### Others
-* Compile source files
+Compile source files
 ```
 python setup.py
 ```
-* Then activate the main program
+Then activate the main program
 ```
 python main.py
-```
-
-## Help
-
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
 ```
 
 ## Authors
 
 Contributors names and contact info:
     
-    Connor Chambelrain
-    email:  lcvcode@gmail.com
-    github: github.com/LCVcode
+    Connor Chamberlain
+     email:  lcvcode@gmail.com
+     github: github.com/LCVcode
 
 ## Version History
 
-* 0.1
-    * Initial Release
+* 0.0
+    * Alpha Release
 
 ## License
 
