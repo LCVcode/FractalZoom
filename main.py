@@ -1,3 +1,3 @@
-from image import default
+import zoomer
 
-default()
+test = zoomer.Zoomer()
