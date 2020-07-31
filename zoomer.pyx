@@ -41,7 +41,16 @@ class Zoomer:
         pyglet.app.run()
 
     def zoom(self, n):
-        pass
+        real_step = (self.limits['rhi'] - self.limits['rlo']) / 3
+        imag_step = (self.limits['ihi'] - self.limits['ilo']) / 3
+
+        x = 2 - (n-1) // 3
+        y = (n-1) % 3
+
+        self.limits['rlo'] += x * real_step
+        self.limits['rhi'] = self.limits['rlo'] + real_step
+        self.limits['ilo'] += y * imag_step
+        self.limits['ihi'] = self.limits['ilo'] + imag_step
 
     def load_config(self):
         with open('config.json', 'r') as myfile:

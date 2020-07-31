@@ -8,7 +8,7 @@
     {
         "height": 400,
         "width": 400,
-        "max_depth": 4,
+        "max_depth": 32,
         "file_name": "temp.png"
     },
     "limits":
