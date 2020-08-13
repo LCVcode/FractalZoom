@@ -2,13 +2,13 @@
     "complex": 
     {
         "real": -0.8,
-        "imag": 0.156
+        "imag": 0.556
     },
     "image": 
     {
-        "height": 400,
-        "width": 400,
-        "max_depth": 128,
+        "height": 600,
+        "width": 600,
+        "max_depth": 64,
         "file_name": "temp.png"
     },
     "limits":

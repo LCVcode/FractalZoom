@@ -41,7 +41,7 @@ class Zoomer:
         pyglet.app.run()
 
     def zoom(self, n):
-        if n == 10:
+        if n == 10:  # Resets to original view
             self.limits = copy(self.config['limits'])
             return
         real_step = (self.limits['rhi'] - self.limits['rlo']) / 3
@@ -49,11 +49,13 @@ class Zoomer:
 
         x = 2 - (n-1) // 3
         y = (n-1) % 3
+        overlap = 0.2 * (self.limits['rhi'] - self.limits['rlo'])
 
-        self.limits['rlo'] += x * real_step
-        self.limits['rhi'] = self.limits['rlo'] + real_step
-        self.limits['ilo'] += y * imag_step
-        self.limits['ihi'] = self.limits['ilo'] + imag_step
+        self.limits['rlo'] += x * (real_step - overlap)
+        self.limits['rhi'] = self.limits['rlo'] + real_step + 2*overlap
+        self.limits['ilo'] += y * (imag_step - overlap)
+        self.limits['ihi'] = self.limits['ilo'] + imag_step + 2*overlap
+
 
     def load_config(self):
         with open('config.json', 'r') as myfile:
