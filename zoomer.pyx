@@ -15,6 +15,15 @@ class Zoomer:
                    65464,
                    65465,
                    65288)
+    alpha_keys = (122,
+                  120,
+                  99,
+                  97,
+                  115,
+                  100,
+                  113,
+                  119,
+                  101)
 
     def __init__(self):
         self.load_config()
@@ -33,6 +42,10 @@ class Zoomer:
         def on_key_press(symbol, modifiers):
             if symbol in Zoomer.numpad_keys:
                 key = Zoomer.numpad_keys.index(symbol) + 1
+                self.zoom(key)
+                self.generate_image()
+            elif symbol in Zoomer.alpha_keys:
+                key = Zoomer.alpha_keys.index(symbol) + 1
                 self.zoom(key)
                 self.generate_image()
             else:
