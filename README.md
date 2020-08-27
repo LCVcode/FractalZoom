@@ -17,9 +17,11 @@ A Cython based fractial viewer.  You can zoom in to see more details, adjust fra
 
 ### Installing
 
-* Install dependencies with `pip install requirements.txt`
+* Clone repository `git@github.com:LCVcode/FractalZoom.git`
+* `cd FractalZoom`
+* Install dependencies with `pip install -r requirements.txt`
 * Compile files with `python setup.py`. Linux users can compile and run with `bash run.sh`.
-* Be sure to recompile if you change settings in config.json.
+* There is no need to recompile after changing settings in config.json.
 
 ### Executing
 
